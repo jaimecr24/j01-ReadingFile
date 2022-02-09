@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -18,13 +17,14 @@ public class ReadingFile {
       Charset charset = StandardCharsets.UTF_8;
       Path path = Paths.get("datos.txt");
       final int ageLimit = 25;
+      final String separator = ":";
 
       try {
           // Get lines from file as Stream of Strings.
           Stream<String> lines = Files.lines(path,charset);
 
           // Map lines to a List of Persona
-          List<Persona> personList = lines.map(Persona::new).toList();
+          List<Persona> personList = lines.map(e -> new Persona(e,separator)).toList();
           // It's possible to do without this line and use directly:
           // lines.map(Persona::new).filter(...).map(...).forEach(...);
 
@@ -40,31 +40,32 @@ public class ReadingFile {
 
     static class Persona {
 
-        private Optional<String> name, city;
-        private Optional<Integer> age;
+        private String name, city;
+        private Integer age;
 
-        public Persona(String line){
-            String[] tokens = line.split(":");
+        public Persona(String line, String separator){
+            String[] tokens = line.split(separator);
             int nTokens = tokens.length;
-            this.name = Optional.empty();
-            this.city = Optional.empty();
-            this.age = Optional.empty();
+            this.name = null;
+            this.city = null;
+            this.age = null;
 
-            if (nTokens>0 && !tokens[0].equals("")) this.name = Optional.of(tokens[0]);
-            if (nTokens>1 && !tokens[1].equals("")) this.city = Optional.of(tokens[1]);
-            if (nTokens>2 && !tokens[2].equals("")) this.age = Optional.of(Integer.parseInt(tokens[2]));
+            if (nTokens>0 && !tokens[0].equals("")) this.name = tokens[0];
+            if (nTokens>1 && !tokens[1].equals("")) this.city = tokens[1];
+            if (nTokens>2 && !tokens[2].equals("")) this.age = Integer.parseInt(tokens[2]);
         }
 
         public String toString(){
             String res;
-            res = "Nombre: " + name.orElse("Desconocido");
-            res += ". Población: " + city.orElse("Desconocido");
-            res += ". Edad: "+ age.map(Object::toString).orElse("Desconocido");
+            res = "Nombre: " + Optional.ofNullable(name).orElse("Desconocido");
+            res += ". Población: " + Optional.ofNullable(city).orElse("Desconocida");
+            Optional<Integer> opcAge = Optional.ofNullable(age);
+            res += ". Edad: "+ opcAge.map(Object::toString).orElse("Desconocida");
             return res;
         }
 
         public boolean isMinorOf(int limit){
-            return (age.isPresent() && age.get() < limit);
+            return (Optional.ofNullable(age).isPresent() && age < limit);
         }
     }
 
